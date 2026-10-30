@@ -1,0 +1,7 @@
+# Example IOC list: one indicator per line, comments start with #
+8.8.8.8                                   # Google DNS (benign baseline)
+1.1.1.1                                   # Cloudflare DNS (benign baseline)
+44d88612fea8a8f36de82e1278abb02f          # EICAR test file (harmless, flagged by AV)
+hxxp://malware[.]wicar[.]org/data/eicar.com   # WICAR test URL
+example[.]com
+10.0.0.15                                 # internal host, never sent to external services
