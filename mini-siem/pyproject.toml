@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mini-siem"
+version = "1.0.0"
+description = "A small SIEM for learning SOC work: log parsing, Sigma-like detection rules mapped to MITRE ATT&CK, alert triage dashboard, IOC enrichment"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+# ioc-enricher (in ../ioc-enricher) is optional and installed separately: pip install -e ../ioc-enricher
+dependencies = ["flask>=3.0", "pyyaml>=6.0", "python-dotenv>=1.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+mini-siem = "mini_siem.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mini_siem = ["rules/*.yml", "templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "../ioc-enricher/src"]
+
+[tool.ruff]
+line-length = 125
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ioc_enricher", "mini_siem"]

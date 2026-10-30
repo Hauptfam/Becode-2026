@@ -1,0 +1,20 @@
+id: MS-005
+title: Unsigned program started from a user-writable folder
+description: >
+  An unsigned executable was launched from C:\Users\Public, C:\ProgramData or a Temp folder.
+  Any user can write there, which makes these folders a favourite place to drop malware.
+severity: medium
+logsource: edr
+mitre:
+  - {id: T1204.002, name: "User Execution: Malicious File", tactic: Execution}
+  - {id: T1036.005, name: "Masquerading: Match Legitimate Name or Location", tactic: Defense Evasion}
+detection:
+  selection:
+    event_type: process_start
+    process_path|re: '^C:\\(Users\\Public|ProgramData)\\|\\AppData\\Local\\Temp\\'
+  signed_binary:
+    signed: true
+  condition: selection and not signed_binary
+group_by: [host]
+falsepositives:
+  - Unsigned in-house tools installed under C:\ProgramData

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Alerts · mini-SIEM{% endblock %}
+{% block content %}
+<h1>Alert queue</h1>
+<p class="sub">{{ stats.events }} events from {{ stats.events_by_source|length }} log sources · {{ stats.hosts|length }} hosts · {{ all_alerts|length }} alerts</p>
+
+<div class="cards">
+  {% for sev in SEVERITIES|reverse %}
+  <a class="panel card bar bar-{{ sev }}" href="{{ url_for('alerts', severity=sev) }}" style="text-decoration:none">
+    <div class="n sev-{{ sev }}">{{ stats.alerts_by_severity.get(sev, 0) }}</div>
+    <div class="l">{{ sev }}</div>
+  </a>
+  {% endfor %}
+  <div class="panel card">
+    <div class="n">{{ stats.alerts_by_status.get('new', 0) }}</div>
+    <div class="l">Not triaged</div>
+  </div>
+</div>
+
+<form class="filters" method="get">
+  <select name="severity" onchange="this.form.submit()">
+    <option value="">All severities</option>
+    {% for s in SEVERITIES|reverse %}<option value="{{ s }}" {{ 'selected' if s == severity }}>{{ s|capitalize }}</option>{% endfor %}
+  </select>
+  <select name="status" onchange="this.form.submit()">
+    <option value="">All statuses</option>
+    {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ STATUS_LABELS[s] }}</option>{% endfor %}
+  </select>
+  {% if status or severity %}<a class="btn btn-ghost" href="{{ url_for('alerts') }}">Clear</a>{% endif %}
+  <noscript><button>Filter</button></noscript>
+</form>
+
+<div class="panel">
+{% if alerts %}
+<table>
+  <thead><tr>
+    <th>Severity</th><th>Alert</th><th class="hide-sm">Host</th><th class="hide-sm">ATT&amp;CK</th>
+    <th>Threat intel</th><th class="hide-sm">First seen</th><th>Status</th>
+  </tr></thead>
+  <tbody>
+  {% for a in alerts %}
+  <tr class="bar bar-{{ a.severity }}">
+    <td><span class="badge sev-{{ a.severity }}">{{ a.severity }}</span>
+        {% if a.severity != a.base_severity %}<div class="muted" style="font-size:11px">was {{ a.base_severity }}</div>{% endif %}</td>
+    <td><a href="{{ url_for('alert', alert_id=a.id) }}">{{ a.title }}</a>
+        <div class="src">{{ a.rule_id }} · {{ a.event_ids|length }} event{{ 's' if a.event_ids|length > 1 }}</div></td>
+    <td class="hide-sm nowrap">{% if a.host %}<a href="{{ url_for('host', host=a.host) }}">{{ a.host }}</a>{% endif %}</td>
+    <td class="hide-sm">{% for m in a.mitre %}<a class="tag" href="{{ m.id|mitre_url }}" target="_blank" rel="noopener" title="{{ m.name }}">{{ m.id }}</a>{% endfor %}</td>
+    <td>{% if a.ti_verdict %}<span class="badge v-{{ a.ti_verdict }}">{{ 'no IOCs' if a.ti_verdict == 'NONE' else a.ti_verdict }}</span>
+        {% else %}<span class="muted">not enriched</span>{% endif %}</td>
+    <td class="hide-sm mono nowrap">{{ a.first_seen|t(true) }}</td>
+    <td class="status status-{{ a.status }}">{{ STATUS_LABELS[a.status] }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">No alerts{% if status or severity %} match these filters{% else %} yet. Ingest logs and run detection: <span class="mono">mini-siem demo</span>{% endif %}.</div>
+{% endif %}
+</div>
+{% endblock %}

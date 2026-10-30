@@ -1,0 +1,28 @@
+name: mini-siem CI
+
+on:
+  push:
+    paths: ["mini-siem/**", "ioc-enricher/**", ".github/workflows/mini-siem-ci.yml"]
+  pull_request:
+    paths: ["mini-siem/**", "ioc-enricher/**", ".github/workflows/mini-siem-ci.yml"]
+
+defaults:
+  run:
+    working-directory: mini-siem
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ../ioc-enricher -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -v
+      - name: Demo runs end to end
+        run: mini-siem --db /tmp/demo.db demo --no-serve

@@ -1,0 +1,20 @@
+id: MS-003
+title: Windows Script Host running a script from a download folder
+description: >
+  wscript.exe, cscript.exe or mshta.exe executed a script stored in the user's Downloads,
+  Temp or Outlook attachment folder. Legitimate admin scripts normally run from a network
+  share (NETLOGON) or a managed path, not from where the browser saves files.
+severity: high
+logsource: edr
+mitre:
+  - {id: T1059.007, name: "Command and Scripting Interpreter: JavaScript", tactic: Execution}
+  - {id: T1204.002, name: "User Execution: Malicious File", tactic: Execution}
+detection:
+  selection:
+    event_type: process_start
+    process_name: [wscript.exe, cscript.exe, mshta.exe]
+    command_line|contains: ['\Downloads\', '\AppData\Local\Temp\', '\Content.Outlook\']
+  condition: selection
+group_by: [host]
+falsepositives:
+  - A user manually running an IT-provided script they downloaded

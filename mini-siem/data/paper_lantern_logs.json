@@ -1,0 +1,893 @@
+{
+  "_comment": "Theoretical log dataset for the fictional 'Paper Lantern' incident, the same incident as ioc-enricher/tests/data/paper_lantern_dataset.json. Each event keeps the native field names of its log source. 'role' explains what the event is, and 'expected_rules' lists the detection rules it must trigger ([] = must stay silent). Everything is invented.",
+  "scenario": "Paper Lantern",
+  "date": "2026-10-28",
+  "threat_intel_dataset": "../../ioc-enricher/tests/data/paper_lantern_dataset.json",
+  "assets": [
+    {
+      "hostname": "FIN-WS-07",
+      "ip": "10.20.4.17",
+      "user": "j.doe",
+      "email": "j.doe@lumenfreight.example",
+      "department": "Finance",
+      "role": "Victim workstation"
+    },
+    {
+      "hostname": "HR-WS-02",
+      "ip": "10.20.6.31",
+      "user": "a.martin",
+      "email": "a.martin@lumenfreight.example",
+      "department": "HR",
+      "role": "Normal activity for comparison"
+    },
+    {
+      "hostname": "DC01",
+      "ip": "10.20.0.10",
+      "user": null,
+      "email": null,
+      "department": "IT",
+      "role": "Domain controller / file server"
+    }
+  ],
+  "events": [
+    {
+      "id": "dns-01",
+      "source": "dns",
+      "role": "HR workstation resolves Wikipedia",
+      "expected_rules": [],
+      "record": {
+        "ts": 1793176211.0,
+        "client": "10.20.6.31",
+        "query": "www.wikipedia.org",
+        "qtype": "A",
+        "rcode": "NOERROR",
+        "answers": [
+          "185.15.59.224"
+        ]
+      }
+    },
+    {
+      "id": "dns-02",
+      "source": "dns",
+      "role": "Victim resolves the phishing domain",
+      "expected_rules": [],
+      "record": {
+        "ts": 1793177041.0,
+        "client": "10.20.4.17",
+        "query": "invoice-portal-secure.example",
+        "qtype": "A",
+        "rcode": "NOERROR",
+        "answers": [
+          "203.0.113.80"
+        ]
+      }
+    },
+    {
+      "id": "dns-03",
+      "source": "dns",
+      "role": "Script resolves the loader download domain",
+      "expected_rules": [],
+      "record": {
+        "ts": 1793177102.0,
+        "client": "10.20.4.17",
+        "query": "cdn-update-check.test",
+        "qtype": "A",
+        "rcode": "NOERROR",
+        "answers": [
+          "198.51.100.23"
+        ]
+      }
+    },
+    {
+      "id": "edr-01",
+      "source": "edr",
+      "role": "Logon script run by wscript.exe from the NETLOGON share (legitimate admin script)",
+      "expected_rules": [],
+      "record": {
+        "@timestamp": "2026-10-28T07:58:00Z",
+        "hostname": "FIN-WS-07",
+        "user": "j.doe",
+        "event_type": "process_start",
+        "process": {
+          "name": "wscript.exe",
+          "path": "C:\\Windows\\System32\\wscript.exe",
+          "command_line": "wscript.exe \\\\DC01\\NETLOGON\\logon.vbs",
+          "parent_name": "userinit.exe",
+          "signed": true
+        }
+      }
+    },
+    {
+      "id": "edr-02",
+      "source": "edr",
+      "role": "User opens Chrome",
+      "expected_rules": [],
+      "record": {
+        "@timestamp": "2026-10-28T08:20:00Z",
+        "hostname": "HR-WS-02",
+        "user": "a.martin",
+        "event_type": "process_start",
+        "process": {
+          "name": "chrome.exe",
+          "path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "command_line": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"",
+          "parent_name": "explorer.exe",
+          "signed": true
+        }
+      }
+    },
+    {
+      "id": "edr-03",
+      "source": "edr",
+      "role": "Chrome loads its own signed DLL from Program Files",
+      "expected_rules": [],
+      "record": {
+        "@timestamp": "2026-10-28T08:20:01Z",
+        "hostname": "HR-WS-02",
+        "user": "a.martin",
+        "event_type": "image_load",
+        "process": {
+          "name": "chrome.exe",
+          "parent_name": "explorer.exe"
+        },
+        "file": {
+          "path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome_elf.dll",
+          "signed": true
+        }
+      }
+    },
+    {
+      "id": "edr-04",
+      "source": "edr",
+      "role": "Windows Defender runs from C:\\ProgramData (user-writable path, but signed)",
+      "expected_rules": [],
+      "record": {
+        "@timestamp": "2026-10-28T08:00:05Z",
+        "hostname": "HR-WS-02",
+        "user": "SYSTEM",
+        "event_type": "process_start",
+        "process": {
+          "name": "MsMpEng.exe",
+          "path": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe",
+          "command_line": "MsMpEng.exe",
+          "parent_name": "services.exe",
+          "signed": true
+        }
+      }
+    },
+    {
+      "id": "edr-05",
+      "source": "edr",
+      "role": "Browser saves the fake invoice script to Downloads",
+      "expected_rules": [],
+      "record": {
+        "@timestamp": "2026-10-28T08:44:20Z",
+        "hostname": "FIN-WS-07",
+        "user": "j.doe",
+        "event_type": "file_create",
+        "process": {
+          "name": "msedge.exe"
+        },
+        "file": {
+          "path": "C:\\Users\\j.doe\\Downloads\\INV-2026-1043.pdf.js",
+          "sha256": "9b1f0d6c2a3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f90",
+          "signed": false
+        }
+      }
+    },
+    {
+      "id": "edr-06",
+      "source": "edr",
+      "role": "Browser saves the decoy PDF (harmless)",
+      "expected_rules": [],
+      "record": {
+        "@timestamp": "2026-10-28T08:44:25Z",
+        "hostname": "FIN-WS-07",
+        "user": "j.doe",
+        "event_type": "file_create",
+        "process": {
+          "name": "msedge.exe"
+        },
+        "file": {
+          "path": "C:\\Users\\j.doe\\Downloads\\invoice_template.pdf",
+          "md5": "ad273fd44ad01da91126c2da5ada05c4",
+          "signed": false
+        }
+      }
+    },
+    {
+      "id": "edr-07",
+      "source": "edr",
+      "role": "User double-clicks the file: wscript.exe runs the script from Downloads",
+      "expected_rules": [
+        "MS-003"
+      ],
+      "record": {
+        "@timestamp": "2026-10-28T08:45:01Z",
+        "hostname": "FIN-WS-07",
+        "user": "j.doe",
+        "event_type": "process_start",
+        "process": {
+          "name": "wscript.exe",
+          "path": "C:\\Windows\\System32\\wscript.exe",
+          "command_line": "\"C:\\Windows\\System32\\WScript.exe\" \"C:\\Users\\j.doe\\Downloads\\INV-2026-1043.pdf.js\"",
+          "parent_name": "explorer.exe",
+          "signed": true
+        }
+      }
+    },
+    {
+      "id": "edr-08",
+      "source": "edr",
+      "role": "The script writes the loader to C:\\Users\\Public",
+      "expected_rules": [
+        "MS-004"
+      ],
+      "record": {
+        "@timestamp": "2026-10-28T08:45:06Z",
+        "hostname": "FIN-WS-07",
+        "user": "j.doe",
+        "event_type": "file_create",
+        "process": {
+          "name": "wscript.exe",
+          "parent_name": "explorer.exe"
+        },
+        "file": {
+          "path": "C:\\Users\\Public\\svc_update.exe",
+          "sha256": "47c564b1a948b0ce4aef199ff63a53ee11c3fc3c073c6499250032c75ae418f9",
+          "signed": false
+        }
+      }
+    },
+    {
+      "id": "edr-09",
+      "source": "edr",
+      "role": "The loader starts (unsigned, from C:\\Users\\Public)",
+      "expected_rules": [
+        "MS-005"
+      ],
+      "record": {
+        "@timestamp": "2026-10-28T08:45:09Z",
+        "hostname": "FIN-WS-07",
+        "user": "j.doe",
+        "event_type": "process_start",
+        "process": {
+          "name": "svc_update.exe",
+          "path": "C:\\Users\\Public\\svc_update.exe",
+          "command_line": "C:\\Users\\Public\\svc_update.exe -k netsvc",
+          "parent_name": "wscript.exe",
+          "sha256": "47c564b1a948b0ce4aef199ff63a53ee11c3fc3c073c6499250032c75ae418f9",
+          "signed": false
+        }
+      }
+    },
+    {
+      "id": "edr-10",
+      "source": "edr",
+      "role": "The loader loads the unknown second-stage DLL",
+      "expected_rules": [
+        "MS-007"
+      ],
+      "record": {
+        "@timestamp": "2026-10-28T09:30:05Z",
+        "hostname": "FIN-WS-07",
+        "user": "j.doe",
+        "event_type": "image_load",
+        "process": {
+          "name": "svc_update.exe",
+          "parent_name": "wscript.exe"
+        },
+        "file": {
+          "path": "C:\\Users\\Public\\msvcx64.dll",
+          "sha1": "25e0fbf1e994a30ddbbb1d7d0eefa74cf814bcf8",
+          "signed": false
+        }
+      }
+    },
+    {
+      "id": "edr-11",
+      "source": "edr",
+      "role": "Analyst isolates the workstation from the network",
+      "expected_rules": [],
+      "record": {
+        "@timestamp": "2026-10-28T09:52:00Z",
+        "hostname": "FIN-WS-07",
+        "user": "soc.analyst",
+        "event_type": "host_isolated",
+        "description": "Host FIN-WS-07 isolated from the network by soc.analyst"
+      }
+    },
+    {
+      "id": "fw-01",
+      "source": "firewall",
+      "role": "Loader checks internet access via 1.1.1.1 (benign destination)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:46:02",
+        "src": "10.20.4.17",
+        "sport": 51022,
+        "dst": "1.1.1.1",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 220
+      }
+    },
+    {
+      "id": "fw-02",
+      "source": "firewall",
+      "role": "C2 beacon 1/8: every 60 s (+/- 1 s) to the C2 server",
+      "expected_rules": [
+        "MS-006"
+      ],
+      "record": {
+        "timestamp": "2026-10-28 08:46:10",
+        "src": "10.20.4.17",
+        "sport": 51031,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 528
+      }
+    },
+    {
+      "id": "fw-03",
+      "source": "firewall",
+      "role": "C2 beacon 2/8: every 60 s (+/- 1 s) to the C2 server",
+      "expected_rules": [
+        "MS-006"
+      ],
+      "record": {
+        "timestamp": "2026-10-28 08:47:10",
+        "src": "10.20.4.17",
+        "sport": 51032,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 512
+      }
+    },
+    {
+      "id": "fw-04",
+      "source": "firewall",
+      "role": "C2 beacon 3/8: every 60 s (+/- 1 s) to the C2 server",
+      "expected_rules": [
+        "MS-006"
+      ],
+      "record": {
+        "timestamp": "2026-10-28 08:48:11",
+        "src": "10.20.4.17",
+        "sport": 51033,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 528
+      }
+    },
+    {
+      "id": "fw-05",
+      "source": "firewall",
+      "role": "C2 beacon 4/8: every 60 s (+/- 1 s) to the C2 server",
+      "expected_rules": [
+        "MS-006"
+      ],
+      "record": {
+        "timestamp": "2026-10-28 08:49:10",
+        "src": "10.20.4.17",
+        "sport": 51034,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 512
+      }
+    },
+    {
+      "id": "fw-06",
+      "source": "firewall",
+      "role": "C2 beacon 5/8: every 60 s (+/- 1 s) to the C2 server",
+      "expected_rules": [
+        "MS-006"
+      ],
+      "record": {
+        "timestamp": "2026-10-28 08:50:10",
+        "src": "10.20.4.17",
+        "sport": 51035,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 528
+      }
+    },
+    {
+      "id": "fw-07",
+      "source": "firewall",
+      "role": "C2 beacon 6/8: every 60 s (+/- 1 s) to the C2 server",
+      "expected_rules": [
+        "MS-006"
+      ],
+      "record": {
+        "timestamp": "2026-10-28 08:51:11",
+        "src": "10.20.4.17",
+        "sport": 51036,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 512
+      }
+    },
+    {
+      "id": "fw-08",
+      "source": "firewall",
+      "role": "C2 beacon 7/8: every 60 s (+/- 1 s) to the C2 server",
+      "expected_rules": [
+        "MS-006"
+      ],
+      "record": {
+        "timestamp": "2026-10-28 08:52:10",
+        "src": "10.20.4.17",
+        "sport": 51037,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 528
+      }
+    },
+    {
+      "id": "fw-09",
+      "source": "firewall",
+      "role": "C2 beacon 8/8: every 60 s (+/- 1 s) to the C2 server",
+      "expected_rules": [
+        "MS-006"
+      ],
+      "record": {
+        "timestamp": "2026-10-28 08:53:10",
+        "src": "10.20.4.17",
+        "sport": 51038,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 512
+      }
+    },
+    {
+      "id": "fw-10",
+      "source": "firewall",
+      "role": "Microsoft Teams traffic 1/7: 7 connections to one IP within 14 min, like the C2, but at IRREGULAR intervals (not beaconing)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:31:00",
+        "src": "10.20.6.31",
+        "sport": 52101,
+        "dst": "52.113.194.132",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 2137
+      }
+    },
+    {
+      "id": "fw-11",
+      "source": "firewall",
+      "role": "Microsoft Teams traffic 2/7: 7 connections to one IP within 14 min, like the C2, but at IRREGULAR intervals (not beaconing)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:31:07",
+        "src": "10.20.6.31",
+        "sport": 52102,
+        "dst": "52.113.194.132",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 2474
+      }
+    },
+    {
+      "id": "fw-12",
+      "source": "firewall",
+      "role": "Microsoft Teams traffic 3/7: 7 connections to one IP within 14 min, like the C2, but at IRREGULAR intervals (not beaconing)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:33:40",
+        "src": "10.20.6.31",
+        "sport": 52103,
+        "dst": "52.113.194.132",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 2811
+      }
+    },
+    {
+      "id": "fw-13",
+      "source": "firewall",
+      "role": "Microsoft Teams traffic 4/7: 7 connections to one IP within 14 min, like the C2, but at IRREGULAR intervals (not beaconing)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:34:02",
+        "src": "10.20.6.31",
+        "sport": 52104,
+        "dst": "52.113.194.132",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 3148
+      }
+    },
+    {
+      "id": "fw-14",
+      "source": "firewall",
+      "role": "Microsoft Teams traffic 5/7: 7 connections to one IP within 14 min, like the C2, but at IRREGULAR intervals (not beaconing)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:38:30",
+        "src": "10.20.6.31",
+        "sport": 52105,
+        "dst": "52.113.194.132",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 3485
+      }
+    },
+    {
+      "id": "fw-15",
+      "source": "firewall",
+      "role": "Microsoft Teams traffic 6/7: 7 connections to one IP within 14 min, like the C2, but at IRREGULAR intervals (not beaconing)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:42:12",
+        "src": "10.20.6.31",
+        "sport": 52106,
+        "dst": "52.113.194.132",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 3822
+      }
+    },
+    {
+      "id": "fw-16",
+      "source": "firewall",
+      "role": "Microsoft Teams traffic 7/7: 7 connections to one IP within 14 min, like the C2, but at IRREGULAR intervals (not beaconing)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:44:59",
+        "src": "10.20.6.31",
+        "sport": 52107,
+        "dst": "52.113.194.132",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 4159
+      }
+    },
+    {
+      "id": "fw-17",
+      "source": "firewall",
+      "role": "Beacon attempt after isolation is blocked (deny): must not count as beaconing",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 09:52:30",
+        "src": "10.20.4.17",
+        "sport": 51101,
+        "dst": "91.215.85.142",
+        "dport": 443,
+        "proto": "tcp",
+        "action": "deny",
+        "bytes_out": 0
+      }
+    },
+    {
+      "id": "fw-18",
+      "source": "firewall",
+      "role": "Internal file share traffic (private destination)",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28 08:20:15",
+        "src": "10.20.6.31",
+        "sport": 52010,
+        "dst": "10.20.0.10",
+        "dport": 445,
+        "proto": "tcp",
+        "action": "allow",
+        "bytes_out": 40211
+      }
+    },
+    {
+      "id": "mail-01",
+      "source": "email",
+      "role": "Internal finance email about invoices: same keywords as phishing, but from our own domain",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28T08:15:00Z",
+        "message_id": "<a1@lumenfreight.example>",
+        "sender": "finance@lumenfreight.example",
+        "recipient": "j.doe@lumenfreight.example",
+        "subject": "Invoice approval process update",
+        "urls": [
+          "https://intranet.lumenfreight.example/finance/approvals"
+        ],
+        "attachments": [],
+        "spf": "pass",
+        "action": "delivered"
+      }
+    },
+    {
+      "id": "mail-02",
+      "source": "email",
+      "role": "THE PHISHING EMAIL: fake overdue invoice from the lookalike domain",
+      "expected_rules": [
+        "MS-001"
+      ],
+      "record": {
+        "timestamp": "2026-10-28T08:41:07Z",
+        "message_id": "<7f3a@invoice-portal-secure.example>",
+        "sender": "billing@invoice-portal-secure.example",
+        "recipient": "j.doe@lumenfreight.example",
+        "subject": "Overdue invoice INV-2026-1043 - action required",
+        "urls": [
+          "https://invoice-portal-secure.example/view/INV-2026-1043.html"
+        ],
+        "attachments": [],
+        "spf": "softfail",
+        "action": "delivered"
+      }
+    },
+    {
+      "id": "mail-03",
+      "source": "email",
+      "role": "Normal email from a partner with an attachment and no link",
+      "expected_rules": [],
+      "record": {
+        "timestamp": "2026-10-28T09:05:12Z",
+        "message_id": "<w44@acme-logistics.example>",
+        "sender": "planning@acme-logistics.example",
+        "recipient": "a.martin@lumenfreight.example",
+        "subject": "Weekly shipment schedule (week 44)",
+        "urls": [],
+        "attachments": [
+          "schedule_w44.xlsx"
+        ],
+        "spf": "pass",
+        "action": "delivered"
+      }
+    },
+    {
+      "id": "proxy-01",
+      "source": "proxy",
+      "role": "Normal browsing on the HR workstation",
+      "expected_rules": [],
+      "record": {
+        "time": "28/Oct/2026:08:30:12 +0000",
+        "client_ip": "10.20.6.31",
+        "user": "a.martin",
+        "method": "GET",
+        "url": "https://www.wikipedia.org/",
+        "status": 200,
+        "bytes": 74210,
+        "content_type": "text/html",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+      }
+    },
+    {
+      "id": "proxy-02",
+      "source": "proxy",
+      "role": "Legitimate JavaScript library from a CDN: a .js download, but not a double extension",
+      "expected_rules": [],
+      "record": {
+        "time": "28/Oct/2026:08:32:40 +0000",
+        "client_ip": "10.20.6.31",
+        "user": "a.martin",
+        "method": "GET",
+        "url": "https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js",
+        "status": 200,
+        "bytes": 87533,
+        "content_type": "application/javascript",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+      }
+    },
+    {
+      "id": "proxy-03",
+      "source": "proxy",
+      "role": "Victim opens the phishing page from the email link",
+      "expected_rules": [],
+      "record": {
+        "time": "28/Oct/2026:08:44:02 +0000",
+        "client_ip": "10.20.4.17",
+        "user": "j.doe",
+        "method": "GET",
+        "url": "https://invoice-portal-secure.example/view/INV-2026-1043.html",
+        "status": 200,
+        "bytes": 15890,
+        "content_type": "text/html",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
+      }
+    },
+    {
+      "id": "proxy-04",
+      "source": "proxy",
+      "role": "Victim downloads INV-2026-1043.pdf.js (a script pretending to be a PDF)",
+      "expected_rules": [
+        "MS-002"
+      ],
+      "record": {
+        "time": "28/Oct/2026:08:44:19 +0000",
+        "client_ip": "10.20.4.17",
+        "user": "j.doe",
+        "method": "GET",
+        "url": "https://invoice-portal-secure.example/download/INV-2026-1043.pdf.js",
+        "status": 200,
+        "bytes": 8421,
+        "content_type": "application/javascript",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
+      }
+    },
+    {
+      "id": "proxy-05",
+      "source": "proxy",
+      "role": "The script downloads the loader from the second URL (plain .js, legacy script user agent)",
+      "expected_rules": [],
+      "record": {
+        "time": "28/Oct/2026:08:45:03 +0000",
+        "client_ip": "10.20.4.17",
+        "user": "j.doe",
+        "method": "GET",
+        "url": "http://cdn-update-check.test/files/update.js",
+        "status": 200,
+        "bytes": 241664,
+        "content_type": "application/javascript",
+        "user_agent": "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; Win64; x64; Trident/7.0)"
+      }
+    },
+    {
+      "id": "proxy-06",
+      "source": "proxy",
+      "role": "Expense report PDF from the intranet",
+      "expected_rules": [],
+      "record": {
+        "time": "28/Oct/2026:09:10:00 +0000",
+        "client_ip": "10.20.6.31",
+        "user": "a.martin",
+        "method": "GET",
+        "url": "https://intranet.lumenfreight.example/forms/expense_report.pdf",
+        "status": 200,
+        "bytes": 48211,
+        "content_type": "application/pdf",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+      }
+    },
+    {
+      "id": "proxy-07",
+      "source": "proxy",
+      "role": "Printer driver from an INTERNAL server addressed by IP: must not trigger the bare-IP rule",
+      "expected_rules": [],
+      "record": {
+        "time": "28/Oct/2026:09:20:41 +0000",
+        "client_ip": "10.20.6.31",
+        "user": "a.martin",
+        "method": "GET",
+        "url": "http://10.20.0.50/drivers/printer_driver.cab",
+        "status": 200,
+        "bytes": 5120000,
+        "content_type": "application/vnd.ms-cab-compressed",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+      }
+    },
+    {
+      "id": "proxy-08",
+      "source": "proxy",
+      "role": "Loader downloads the second stage from a VPS addressed by its IP",
+      "expected_rules": [
+        "MS-008"
+      ],
+      "record": {
+        "time": "28/Oct/2026:09:30:02 +0000",
+        "client_ip": "10.20.4.17",
+        "user": "j.doe",
+        "method": "GET",
+        "url": "http://185.81.157.24/m/stage2.bin",
+        "status": 200,
+        "bytes": 96256,
+        "content_type": "application/octet-stream",
+        "user_agent": "svc_update/2.1"
+      }
+    }
+  ],
+  "expected_alerts": [
+    {
+      "rule": "MS-001",
+      "host": "FIN-WS-07",
+      "events": [
+        "mail-02"
+      ],
+      "severity": "medium",
+      "ti_verdict": "MALICIOUS",
+      "severity_after_enrichment": "high"
+    },
+    {
+      "rule": "MS-002",
+      "host": "FIN-WS-07",
+      "events": [
+        "proxy-04"
+      ],
+      "severity": "high",
+      "ti_verdict": "MALICIOUS",
+      "severity_after_enrichment": "critical"
+    },
+    {
+      "rule": "MS-003",
+      "host": "FIN-WS-07",
+      "events": [
+        "edr-07"
+      ],
+      "severity": "high",
+      "ti_verdict": "NONE",
+      "severity_after_enrichment": "high"
+    },
+    {
+      "rule": "MS-004",
+      "host": "FIN-WS-07",
+      "events": [
+        "edr-08"
+      ],
+      "severity": "high",
+      "ti_verdict": "MALICIOUS",
+      "severity_after_enrichment": "critical"
+    },
+    {
+      "rule": "MS-005",
+      "host": "FIN-WS-07",
+      "events": [
+        "edr-09"
+      ],
+      "severity": "medium",
+      "ti_verdict": "MALICIOUS",
+      "severity_after_enrichment": "high"
+    },
+    {
+      "rule": "MS-006",
+      "host": "FIN-WS-07",
+      "events": [
+        "fw-02",
+        "fw-03",
+        "fw-04",
+        "fw-05",
+        "fw-06",
+        "fw-07",
+        "fw-08",
+        "fw-09"
+      ],
+      "severity": "high",
+      "ti_verdict": "MALICIOUS",
+      "severity_after_enrichment": "critical"
+    },
+    {
+      "rule": "MS-007",
+      "host": "FIN-WS-07",
+      "events": [
+        "edr-10"
+      ],
+      "severity": "medium",
+      "ti_verdict": "UNKNOWN",
+      "severity_after_enrichment": "medium"
+    },
+    {
+      "rule": "MS-008",
+      "host": "FIN-WS-07",
+      "events": [
+        "proxy-08"
+      ],
+      "severity": "medium",
+      "ti_verdict": "SUSPICIOUS",
+      "severity_after_enrichment": "medium"
+    }
+  ]
+}

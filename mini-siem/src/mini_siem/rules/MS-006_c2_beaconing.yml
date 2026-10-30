@@ -1,0 +1,23 @@
+id: MS-006
+title: Regular outbound connections to the same host (possible C2 beaconing)
+description: >
+  A host connected to the same external IP and port at least 6 times within 15 minutes at
+  very regular intervals. Malware "phones home" on a timer; people and normal apps don't.
+severity: high
+logsource: firewall
+mitre:
+  - {id: T1071.001, name: "Application Layer Protocol: Web Protocols", tactic: Command and Control}
+  - {id: T1573, name: "Encrypted Channel", tactic: Command and Control}
+detection:
+  selection:
+    action: allow
+  internal_destination:
+    dst_ip|cidr: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16]
+  condition: selection and not internal_destination
+aggregation:
+  group_by: [host, dst_ip, dst_port]
+  min_count: 6
+  timeframe: 900
+  max_jitter: 5
+falsepositives:
+  - Monitoring agents or software update checks on a fixed timer (allowlist their destinations)
