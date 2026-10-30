@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compliance-check"
+version = "1.0.0"
+description = "Technical compliance readiness scan of a code repository against NIS2, DORA, CRA, ISO/IEC 27001 and 27005, the AI Act and GDPR, with a PDF report"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "reportlab>=4.0",
+  "pyyaml>=6.0",
+  "requests>=2.31",
+  "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5", "pypdf>=4.0"]
+
+[project.scripts]
+compliance-check = "compliance_check.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 125
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Long legal texts and report layout strings
+"src/compliance_check/frameworks.py" = ["E501"]
+"src/compliance_check/pdf.py" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["compliance_check"]
