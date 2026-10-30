@@ -1,0 +1,13 @@
+Incident summary (fictional, for testing extract mode)
+
+At 09:12 UTC the EDR raised an alert on WKS-0042 (10.0.12.42): WINWORD.EXE spawned
+powershell.exe, which downloaded a second stage from hxxp://malware[.]wicar[.]org/data/eicar.com
+and saved it as C:\Users\Public\update.exe.
+
+The dropped file had MD5 44d88612fea8a8f36de82e1278abb02f.
+
+Shortly after, the host made DNS requests for example[.]com and opened outbound
+connections to 1.1.1[.]1 on port 443.
+
+The phishing email that started the chain came from a lookalike domain, example(.)org,
+and contained the attachment invoice_2026.docm.
