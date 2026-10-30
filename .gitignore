@@ -218,3 +218,49 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# ═══ IOC enrichment tool ═══
+
+# API keys & local config (keep .env.example / config.example.* committed)
+.env.*
+!.env.example
+config.yaml
+config.yml
+config.json
+config.local.*
+!config.example.*
+*.key
+secrets.*
+credentials.*
+
+# IOC inputs (real indicators from investigations)
+iocs/
+input/
+*.ioc
+iocs*.txt
+iocs*.csv
+
+# Enrichment results & reports
+output/
+results/
+reports/
+*.jsonl
+enriched_*.csv
+enriched_*.json
+
+# API response caches (contain raw threat intel, can be large)
+cache/
+.cache/
+*.sqlite
+*.sqlite3
+*.db
+requests_cache*
+
+# Logs (may contain queried IOCs and sometimes keys in URLs)
+logs/
+*.log
+
+# Downloaded samples or feeds, just in case
+samples/
+feeds/-
