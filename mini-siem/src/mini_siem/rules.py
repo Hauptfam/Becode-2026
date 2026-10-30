@@ -33,6 +33,7 @@ Aggregation rules (for patterns like beaconing) add:
 from __future__ import annotations
 
 import ipaddress
+import itertools
 import re
 import statistics
 from dataclasses import dataclass, field
@@ -268,7 +269,7 @@ def find_regular_window(events: list[dict], min_count: int, timeframe: float,
             if window[-1]["ts"] - window[0]["ts"] > timeframe:
                 continue
             if max_jitter is not None:
-                gaps = [b["ts"] - a["ts"] for a, b in zip(window, window[1:])]
+                gaps = [b["ts"] - a["ts"] for a, b in itertools.pairwise(window)]
                 if statistics.pstdev(gaps) > max_jitter:
                     continue
             if best is None or len(window) > len(best):
