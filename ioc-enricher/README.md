@@ -167,6 +167,13 @@ The real provider classes run unchanged against a fake "internet" that answers f
 
 All names, domains (`.example`/`.test` are reserved and never resolve) and threat-intel results in this scenario are made up.
 
+To **see the dataset and the tool's verdicts** in your terminal, without running pytest:
+
+```bash
+python tests/show_scenario.py            # report, invented API answers, tool output, expected vs actual
+python tests/show_scenario.py --details  # also every field each source returned
+```
+
 ## Roadmap
 
 - [ ] Local cache (SQLite) to save API quota on repeated lookups
