@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Rules · mini-SIEM{% endblock %}
+{% block content %}
+<h1>Detection rules</h1>
+<p class="sub">{{ rules|length }} rules · YAML files in <span class="mono">src/mini_siem/rules/</span></p>
+
+<div class="panel">
+<table>
+  <thead><tr><th>Rule</th><th>Severity</th><th class="hide-sm">Log source</th><th>ATT&amp;CK</th><th>Alerts</th></tr></thead>
+  <tbody>
+  {% for r in rules %}
+  <tr>
+    <td><strong>{{ r.title }}</strong><div class="src">{{ r.id }} · {{ r.path }}</div>
+      <details><summary>logic</summary>
+        <p class="muted" style="margin:6px 0">{{ r.description }}</p>
+        {% if r.aggregation %}{% set logic = {'detection': r.detection, 'aggregation': r.aggregation} %}
+        {% else %}{% set logic = {'detection': r.detection} %}{% endif %}
+        <pre>{{ logic|to_yaml }}</pre>
+      </details></td>
+    <td><span class="badge sev-{{ r.severity }}">{{ r.severity }}</span></td>
+    <td class="hide-sm src">{{ r.logsource }}</td>
+    <td>{% for m in r.mitre %}<a class="tag" href="{{ m.id|mitre_url }}" target="_blank" rel="noopener" title="{{ m.name }}">{{ m.id }}</a>{% endfor %}
+        <div class="muted" style="font-size:12px">{{ r.mitre|map(attribute='tactic')|unique|join(', ') }}</div></td>
+    <td>{{ hits.get(r.id, 0) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -5,78 +5,39 @@ The dataset in tests/data/ contains:
   * paper_lantern_dataset.json: invented API responses for every IOC, plus the verdict an analyst would expect
 
 The real provider classes run unchanged; only the HTTP layer is replaced by a fake
-"internet" that answers from the dataset. This checks the whole pipeline:
+"internet" (ioc_enricher.offline.DatasetSession) that answers from the dataset. This checks the whole pipeline:
 extraction -> refanging -> provider requests -> response parsing -> scoring -> verdict -> output.
 """
 
 from __future__ import annotations
 
-import base64
 import json
-from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlparse
 
 import pytest
-from conftest import FakeResponse
 
 from ioc_enricher import cli
 from ioc_enricher.enrich import Verdict, enrich
 from ioc_enricher.ioc import extract, parse
+from ioc_enricher.offline import DatasetSession, offline_providers
 from ioc_enricher.output import render_markdown
-from ioc_enricher.providers import RDAP, AbuseIPDB, Status, URLhaus, VirusTotal
+from ioc_enricher.providers import Status
 
 DATA = Path(__file__).parent / "data"
 DATASET = json.loads((DATA / "paper_lantern_dataset.json").read_text(encoding="utf-8"))
 REPORT_PATH = DATA / DATASET["report_file"]
 INDICATORS = {item["value"]: item for item in DATASET["indicators"]}
-NOW = datetime.fromisoformat(DATASET["now"])
-API_KEY = "test-key"
 
 
-class ScenarioInternet:
-    """Fake requests.Session: works out which provider and IOC a request is for,
-    then answers with the dataset entry (or a realistic 'not found')."""
+class ScenarioInternet(DatasetSession):
+    """Fake "internet" answering from the Paper Lantern dataset (see ioc_enricher.offline)."""
 
     def __init__(self) -> None:
-        self.headers: dict[str, str] = {}
-        self.calls: list[tuple[str, str]] = []  # (provider, ioc)
-
-    def request(self, method, url, **kwargs):
-        provider, ioc = self._identify(url, kwargs)
-        self.calls.append((provider, ioc))
-        entry = INDICATORS.get(ioc, {}).get("responses", {}).get(provider)
-        if entry is None:
-            # URLhaus answers 200 + "no_results"; the others answer 404.
-            if provider == "urlhaus":
-                return FakeResponse(200, {"query_status": "no_results"})
-            return FakeResponse(404)
-        return FakeResponse(entry.get("status", 200), entry["body"])
-
-    @staticmethod
-    def _identify(url: str, kwargs: dict) -> tuple[str, str]:
-        parsed = urlparse(url)
-        last = parsed.path.rstrip("/").rsplit("/", 1)[-1]
-        if parsed.hostname == "www.virustotal.com":
-            if "/urls/" in parsed.path:  # VT identifies URLs by unpadded base64
-                last = base64.urlsafe_b64decode(last + "=" * (-len(last) % 4)).decode()
-            return "virustotal", last
-        if parsed.hostname == "api.abuseipdb.com":
-            return "abuseipdb", kwargs["params"]["ipAddress"]
-        if parsed.hostname == "urlhaus-api.abuse.ch":
-            return "urlhaus", next(iter(kwargs["data"].values()))
-        if parsed.hostname == "rdap.org":
-            return "rdap", last
-        raise AssertionError(f"unexpected outbound request to {url}")
+        super().__init__(DATASET)
 
 
 def scenario_providers(internet: ScenarioInternet):
-    return [
-        VirusTotal(API_KEY, session=internet),
-        AbuseIPDB(API_KEY, session=internet),
-        URLhaus(API_KEY, session=internet),
-        RDAP(session=internet, now=NOW),
-    ]
+    return offline_providers(DATASET, session=internet)
 
 
 @pytest.fixture(scope="module")
@@ -176,3 +137,24 @@ def test_cli_end_to_end(monkeypatch, capsys):
     assert {r["ioc"]: r["verdict"] for r in reports} == {
         value: item["expected"]["verdict"] for value, item in INDICATORS.items()
     }
+
+
+def test_cli_offline_dataset_flag(capsys):
+    """--offline-dataset gives the same verdicts without patching anything."""
+    dataset_path = DATA / "paper_lantern_dataset.json"
+    exit_code = cli.main(["-x", "-f", str(REPORT_PATH), "-o", "json", "--offline-dataset", str(dataset_path)])
+    captured = capsys.readouterr()
+    assert exit_code == cli.EXIT_OK
+    assert "offline mode" in captured.err
+    verdicts = {r["ioc"]: r["verdict"] for r in json.loads(captured.out)["reports"]}
+    assert verdicts == {value: item["expected"]["verdict"] for value, item in INDICATORS.items()}
+
+
+def test_cli_offline_dataset_missing_file(tmp_path, capsys):
+    assert cli.main(["8.8.8.8", "--offline-dataset", str(tmp_path / "nope.json")]) == cli.EXIT_USAGE
+    assert "cannot load offline dataset" in capsys.readouterr().err
+
+
+def test_offline_session_rejects_unknown_hosts():
+    with pytest.raises(ValueError):
+        DatasetSession(DATASET).request("GET", "https://example.org/whatever")

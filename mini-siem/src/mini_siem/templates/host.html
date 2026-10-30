@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ host }} · mini-SIEM{% endblock %}
+{% block content %}
+<p class="muted" style="margin:0 0 8px"><a href="{{ url_for('events') }}">← Events</a></p>
+<h1>Host timeline: {{ host }}</h1>
+<p class="sub">{{ events|length }} events · {{ alerts|length }} alert{{ 's' if alerts|length != 1 }} · read top to bottom to follow the attack</p>
+
+<div class="panel">
+<table class="timeline">
+  <thead><tr><th>Time (UTC)</th><th>Source</th><th>Event</th><th>Alert</th></tr></thead>
+  <tbody>
+  {% for e in events %}
+  {% set hits = rule_of.get(e.id, []) %}
+  <tr class="{{ 'hl' if hits }}">
+    <td class="mono nowrap time">{{ e.timestamp|t }}</td>
+    <td class="src">{{ e.source }}</td>
+    <td class="mono">{{ e.message }}</td>
+    <td>{% for a in hits %}<a class="badge sev-{{ a.severity }}" href="{{ url_for('alert', alert_id=a.id) }}" title="{{ a.title }}">{{ a.rule_id }}</a> {% endfor %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+id: MS-002
+title: Download of a script disguised with a double file extension
+description: >
+  A file such as "invoice.pdf.js" was downloaded through the proxy. Windows hides known
+  extensions by default, so the user sees "invoice.pdf" while the file is really a script.
+severity: high
+logsource: proxy
+mitre:
+  - {id: T1036.007, name: "Masquerading: Double File Extension", tactic: Defense Evasion}
+  - {id: T1204.002, name: "User Execution: Malicious File", tactic: Execution}
+detection:
+  selection:
+    url|re: '\.(pdf|docx?|xlsx?|txt|jpe?g|png|zip)\.(js|jse|vbs|vbe|wsf|hta|exe|scr|bat|cmd|lnk)(\?|$)'
+  condition: selection
+group_by: [host]
+falsepositives:
+  - Very rare. Some build systems produce names like "report.pdf.exe" for self-extracting archives.

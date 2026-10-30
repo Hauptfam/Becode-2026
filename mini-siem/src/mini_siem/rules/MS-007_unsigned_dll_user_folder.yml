@@ -1,0 +1,18 @@
+id: MS-007
+title: Unsigned DLL loaded from a user-writable folder
+description: >
+  A process loaded an unsigned DLL from C:\Users or C:\ProgramData. Malware often downloads
+  extra modules as DLLs to keep its main executable small and avoid detection.
+severity: medium
+logsource: edr
+mitre:
+  - {id: T1129, name: "Shared Modules", tactic: Execution}
+detection:
+  selection:
+    event_type: image_load
+    signed: false
+    file_path|re: '^C:\\(Users|ProgramData)\\'
+  condition: selection
+group_by: [host]
+falsepositives:
+  - Unsigned plugins of legitimate per-user applications

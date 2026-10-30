@@ -1,0 +1,18 @@
+id: MS-004
+title: Script interpreter wrote an executable to disk
+description: >
+  A script host or PowerShell created an .exe, .dll or .scr file. Scripts that download and
+  save executables are the classic second step of a malware dropper.
+severity: high
+logsource: edr
+mitre:
+  - {id: T1105, name: "Ingress Tool Transfer", tactic: Command and Control}
+detection:
+  selection:
+    event_type: file_create
+    process_name: [wscript.exe, cscript.exe, mshta.exe, powershell.exe, pwsh.exe]
+    file_path|re: '\.(exe|dll|scr)$'
+  condition: selection
+group_by: [host]
+falsepositives:
+  - Software deployment scripts (usually run as SYSTEM from a management tool)

@@ -1,0 +1,19 @@
+id: MS-001
+title: Invoice-themed email with a link from an external sender
+description: >
+  An email from outside the organisation uses payment-related wording and contains a link.
+  This is the most common lure for credential phishing and malware delivery in finance teams.
+severity: medium
+logsource: email
+mitre:
+  - {id: T1566.002, name: "Phishing: Spearphishing Link", tactic: Initial Access}
+detection:
+  selection:
+    subject|contains: [invoice, payment, overdue, wire transfer, remittance]
+    url_count|gte: 1
+  internal_sender:
+    sender_domain|endswith: lumenfreight.example
+  condition: selection and not internal_sender
+group_by: [host]
+falsepositives:
+  - Genuine invoices from suppliers that link to their billing portal

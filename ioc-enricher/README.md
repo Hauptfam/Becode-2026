@@ -87,6 +87,9 @@ ioc-enricher --extract -f examples/threat_report.txt -o md
 # Show every field and a link to each source
 ioc-enricher -v 8.8.8.8
 
+# Offline mode: answers come from a threat-intel dataset file (labs, demos, no API keys)
+ioc-enricher -x -f tests/data/paper_lantern_report.txt --offline-dataset tests/data/paper_lantern_dataset.json
+
 # Use in a script: exit code 2 if anything is malicious
 cat alert.log | ioc-enricher --extract --fail-on malicious || echo "escalate!"
 ```
@@ -100,6 +103,7 @@ cat alert.log | ioc-enricher --extract --fail-on malicious || echo "escalate!"
 | `-v` | Verbose: all details and source links |
 | `--fail-on malicious\|suspicious` | Exit code 2 if an IOC reaches that verdict |
 | `--workers N` | Parallel lookups (default 8) |
+| `--offline-dataset JSON` | Answer from a dataset file instead of the real APIs |
 
 ## How the verdict is computed
 
@@ -124,13 +128,14 @@ src/ioc_enricher/
 ├── enrich.py         # parallel lookups + verdict logic
 ├── output.py         # text / JSON / CSV / Markdown rendering
 ├── cli.py            # command-line interface
+├── offline.py        # offline mode: answers from a dataset file
 └── providers/
     ├── base.py       # shared HTTP + error handling (401, 404, 429...)
     ├── virustotal.py
     ├── abuseipdb.py
     ├── urlhaus.py
     └── rdap.py
-tests/                # 98 tests incl. an end-to-end incident scenario, no network needed
+tests/                # 101 tests incl. an end-to-end incident scenario, no network needed
 ```
 
 Adding a new source means writing one class with a `_lookup()` method. See `providers/abuseipdb.py` for the simplest example.
@@ -182,6 +187,7 @@ python tests/show_scenario.py --details  # also every field each source returned
 - [ ] More sources: AlienVault OTX, GreyNoise, Shodan, ThreatFox
 - [ ] MITRE ATT&CK tags from VirusTotal sandbox reports
 - [ ] Send results to TheHive / MISP
+- [x] Used by [mini-siem](../mini-siem/) to enrich SIEM alerts
 
 ## Disclaimer
 

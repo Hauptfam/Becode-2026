@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ alert.rule_id }} · {{ alert.title }}{% endblock %}
+{% block content %}
+<p class="muted" style="margin:0 0 8px"><a href="{{ url_for('alerts') }}">← Alerts</a></p>
+<h1><span class="badge sev-{{ alert.severity }}" style="font-size:13px;vertical-align:3px">{{ alert.severity }}</span> {{ alert.title }}</h1>
+<p class="sub">{{ alert.rule_id }} · alert #{{ alert.id }} ·
+  {% if alert.host %}host <a href="{{ url_for('host', host=alert.host) }}">{{ alert.host }}</a> · {% endif %}
+  {{ alert.first_seen|t(true) }}{% if alert.last_seen != alert.first_seen %} → {{ alert.last_seen|t }}{% endif %} UTC</p>
+
+<div class="grid2">
+  <div>
+    <div class="panel pad">
+      <p style="margin-top:0">{{ alert.description }}</p>
+      <dl class="kv">
+        <dt>Severity</dt>
+        <dd><span class="sev-{{ alert.severity }}">{{ alert.severity|capitalize }}</span>
+          {% if alert.severity != alert.base_severity %}<span class="muted">· raised from {{ alert.base_severity }} because a source flagged an IOC as malicious</span>{% endif %}</dd>
+        <dt>MITRE ATT&amp;CK</dt>
+        <dd>{% for m in alert.mitre %}<div><a href="{{ m.id|mitre_url }}" target="_blank" rel="noopener">{{ m.id }}</a> {{ m.name }} <span class="muted">({{ m.tactic }})</span></div>{% endfor %}</dd>
+        {% if rule and rule.falsepositives %}<dt>Possible FPs</dt><dd class="muted">{{ rule.falsepositives|join('; ') }}</dd>{% endif %}
+      </dl>
+    </div>
+
+    <h2>Indicators · enriched with ioc-enricher</h2>
+    <div class="panel">
+    {% if iocs or missing %}
+      <table>
+        <thead><tr><th>IOC</th><th>Verdict</th><th>What the sources say</th></tr></thead>
+        <tbody>
+        {% for i in iocs %}
+        <tr>
+          <td class="mono">{{ i.defanged }}<div class="src">{{ i.type }}</div></td>
+          <td><span class="badge v-{{ i.verdict }}">{{ i.verdict }}</span>
+              {% if i.score is not none %}<div class="muted" style="font-size:12px">score {{ i.score }}</div>{% endif %}</td>
+          <td>{% for r in i.results if r.status != 'skipped' %}
+              <div><span class="muted">{{ r.provider }}:</span> {{ r.summary or r.status|replace('_', ' ') }}
+                {% if r.link %}<a href="{{ r.link }}" target="_blank" rel="noopener noreferrer">↗</a>{% endif %}</div>
+              {% else %}<span class="muted">no source data</span>{% endfor %}</td>
+        </tr>
+        {% endfor %}
+        {% for v in missing %}
+        <tr><td class="mono">{{ v|defang }}</td><td><span class="muted">not enriched</span></td>
+            <td class="muted">Run <span class="mono">mini-siem enrich</span></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% elif alert.ti_verdict %}
+      <div class="empty">No external indicators in this alert's events (internal IPs are never sent to threat-intel sources).</div>
+    {% else %}
+      <div class="empty">Not enriched yet. Run <span class="mono">mini-siem enrich</span>.</div>
+    {% endif %}
+    </div>
+
+    <h2>Events ({{ events|length }})</h2>
+    <div class="panel">
+      <table>
+        <thead><tr><th>Time (UTC)</th><th>Source</th><th>Event</th></tr></thead>
+        <tbody>
+        {% for e in events %}
+        <tr>
+          <td class="mono nowrap">{{ e.timestamp|t }}</td>
+          <td class="src">{{ e.source }}</td>
+          <td><div class="mono">{{ e.message }}</div>
+            <details><summary>raw log &amp; normalized fields</summary>
+              <pre>{{ e.raw|pretty }}</pre>
+              <pre>{{ e|normalized|pretty }}</pre>
+            </details></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel pad">
+      <h2 style="margin-top:0">Triage</h2>
+      <form method="post" action="{{ url_for('alert_status', alert_id=alert.id) }}">
+        <p style="margin:0 0 8px"><select name="status" style="width:100%">
+          {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == alert.status }}>{{ STATUS_LABELS[s] }}</option>{% endfor %}
+        </select></p>
+        <p style="margin:0 0 8px"><textarea name="notes" placeholder="Analyst notes: what you checked, what you decided, and why">{{ alert.notes }}</textarea></p>
+        <button type="submit">Save</button>
+      </form>
+      <p class="muted" style="font-size:12px;margin-bottom:0">Last update {{ alert.updated_at|t(true) }} UTC</p>
+    </div>
+
+    {% if related %}
+    <h2>Other alerts on {{ alert.host }}</h2>
+    <div class="panel">
+      <table><tbody>
+      {% for a in related %}
+      <tr class="bar bar-{{ a.severity }}"><td><a href="{{ url_for('alert', alert_id=a.id) }}">{{ a.title }}</a>
+        <div class="src">{{ a.rule_id }} · {{ a.first_seen|t }}</div></td></tr>
+      {% endfor %}
+      </tbody></table>
+    </div>
+    <p><a href="{{ url_for('host', host=alert.host) }}">Open the full timeline for {{ alert.host }} →</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

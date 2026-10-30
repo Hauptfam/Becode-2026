@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Events · mini-SIEM{% endblock %}
+{% block content %}
+<h1>Event search</h1>
+<p class="sub">{{ total }} event{{ 's' if total != 1 }}{% if q %} matching "{{ q }}"{% endif %} · rows in red are part of an alert</p>
+
+<form class="filters" method="get">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search anything: IP, domain, hash, process…" style="min-width:280px">
+  <select name="source">
+    <option value="">All sources</option>
+    {% for s in sources %}<option {{ 'selected' if s == source }}>{{ s }}</option>{% endfor %}
+  </select>
+  <select name="host">
+    <option value="">All hosts</option>
+    {% for h in hosts %}<option {{ 'selected' if h == host }}>{{ h }}</option>{% endfor %}
+  </select>
+  <button type="submit">Search</button>
+  {% if q or source or host %}<a class="btn btn-ghost" href="{{ url_for('events') }}">Clear</a>{% endif %}
+</form>
+
+<div class="panel">
+{% if events %}
+<table>
+  <thead><tr><th>Time (UTC)</th><th>Source</th><th class="hide-sm">Host</th><th>Event</th></tr></thead>
+  <tbody>
+  {% for e in events %}
+  <tr class="{{ 'hl' if e.id in flagged }}">
+    <td class="mono nowrap">{{ e.timestamp|t(true) }}</td>
+    <td class="src">{{ e.source }}<div>{{ e.event_type }}</div></td>
+    <td class="hide-sm nowrap">{% if e.host %}<a href="{{ url_for('host', host=e.host) }}">{{ e.host }}</a>{% else %}<span class="muted">–</span>{% endif %}</td>
+    <td><div class="mono">{{ e.message }}</div>
+      <details><summary>raw log</summary><pre>{{ e.raw|pretty }}</pre></details></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">No events found.</div>
+{% endif %}
+</div>
+
+{% if total > page_size %}
+<p class="filters" style="margin-top:14px">
+  {% if page > 1 %}<a class="btn btn-ghost" href="{{ url_for('events', q=q, source=source, host=host, page=page-1) }}">← Previous</a>{% endif %}
+  <span class="muted">Page {{ page }} of {{ ((total - 1) // page_size) + 1 }}</span>
+  {% if page * page_size < total %}<a class="btn btn-ghost" href="{{ url_for('events', q=q, source=source, host=host, page=page+1) }}">Next →</a>{% endif %}
+</p>
+{% endif %}
+{% endblock %}
