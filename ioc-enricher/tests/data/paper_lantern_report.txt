@@ -1,0 +1,26 @@
+INCIDENT REPORT: "PAPER LANTERN" (FICTIONAL, FOR TESTING ONLY)
+==============================================================
+
+Every company, domain, host, IP role and threat-intel result in this report is
+invented. The .example and .test domains are reserved and never resolve.
+
+Timeline (UTC)
+--------------
+08:41  Finance employee at Lumen Freight receives an email from billing@invoice-portal-secure[.]example
+       asking to review "overdue invoice INV-2026-1043".
+08:44  User clicks hxxps://invoice-portal-secure[.]example/view/INV-2026-1043.html and downloads
+       INV-2026-1043.pdf.js. The page also shows a decoy PDF (MD5 ad273fd44ad01da91126c2da5ada05c4).
+08:45  wscript.exe runs the script, which fetches hxxp://cdn-update-check(.)test/files/update.js
+       and drops C:\Users\Public\svc_update.exe on workstation FIN-WS-07 (10.20.4.17).
+       SHA256 of svc_update.exe: 47c564b1a948b0ce4aef199ff63a53ee11c3fc3c073c6499250032c75ae418f9
+08:46  svc_update.exe checks internet access by contacting 1[.]1[.]1[.]1, then beacons over HTTPS
+       to 91.215.85[.]142 every 60 seconds.
+09:30  A second-stage module is downloaded from a VPS at 185.81.157[.]24.
+       It loads a DLL that no sandbox has seen yet, SHA1 25e0fbf1e994a30ddbbb1d7d0eefa74cf814bcf8.
+09:52  EDR isolates FIN-WS-07. Logs are exported to fin-ws-07_triage.zip for analysis.
+
+Analyst notes
+-------------
+- The same lookalike domain (invoice-portal-secure.example) appears in the sender and the link.
+- The VirusTotal lookup for 185.81.157[.]24 hit the API rate limit during triage.
+- No credentials were entered on the phishing page according to proxy logs.

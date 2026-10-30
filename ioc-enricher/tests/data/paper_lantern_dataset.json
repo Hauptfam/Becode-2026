@@ -1,0 +1,133 @@
+{
+  "_comment": "Theoretical dataset for the fictional 'Paper Lantern' incident. Every API response below is invented and shaped like the real VirusTotal v3, AbuseIPDB v2, URLhaus v1 and RDAP responses. Any provider not listed for an indicator answers 'not found'.",
+  "scenario": "Paper Lantern",
+  "report_file": "paper_lantern_report.txt",
+  "now": "2026-10-28T12:00:00+00:00",
+  "indicators": [
+    {
+      "value": "invoice-portal-secure.example",
+      "type": "domain",
+      "role": "Lookalike phishing domain, registered 5 days before the attack",
+      "responses": {
+        "virustotal": {"body": {"data": {"attributes": {
+          "last_analysis_stats": {"malicious": 1, "suspicious": 0, "harmless": 62, "undetected": 27},
+          "registrar": "Fictional Registrar Ltd", "reputation": -3}}}},
+        "urlhaus": {"body": {"query_status": "ok", "url_count": "1", "firstseen": "2026-10-27 18:02:11 UTC",
+          "urlhaus_reference": "https://urlhaus.abuse.ch/host/invoice-portal-secure.example/",
+          "urls": [{"url_status": "online", "tags": ["phishing", "js"]}]}},
+        "rdap": {"body": {
+          "events": [{"eventAction": "registration", "eventDate": "2026-10-23T09:15:00Z"},
+                     {"eventAction": "expiration", "eventDate": "2027-10-23T09:15:00Z"}],
+          "entities": [{"roles": ["registrar"], "vcardArray": ["vcard", [["fn", {}, "text", "Fictional Registrar Ltd"]]]}],
+          "nameservers": [{"ldhName": "NS1.BULLETPROOF-DNS.TEST"}]}}
+      },
+      "expected": {"verdict": "MALICIOUS", "score": 100}
+    },
+    {
+      "value": "https://invoice-portal-secure.example/view/INV-2026-1043.html",
+      "type": "url",
+      "role": "Phishing landing page that served the malicious script",
+      "responses": {
+        "virustotal": {"body": {"data": {"attributes": {
+          "last_analysis_stats": {"malicious": 8, "suspicious": 2, "harmless": 60, "undetected": 25}}}}},
+        "urlhaus": {"body": {"query_status": "ok", "url_status": "online", "threat": "malware_download",
+          "tags": ["phishing", "js"], "date_added": "2026-10-27 18:02:11 UTC",
+          "urlhaus_reference": "https://urlhaus.abuse.ch/url/0000001/"}}
+      },
+      "expected": {"verdict": "MALICIOUS", "score": 100}
+    },
+    {
+      "value": "ad273fd44ad01da91126c2da5ada05c4",
+      "type": "md5",
+      "role": "Decoy PDF shown to the victim (a real invoice template, not malicious)",
+      "responses": {
+        "virustotal": {"body": {"data": {"attributes": {
+          "last_analysis_stats": {"malicious": 0, "suspicious": 0, "harmless": 0, "undetected": 70},
+          "meaningful_name": "invoice_template.pdf", "type_description": "PDF"}}}}
+      },
+      "expected": {"verdict": "CLEAN", "score": 0}
+    },
+    {
+      "value": "http://cdn-update-check.test/files/update.js",
+      "type": "url",
+      "role": "Second download URL, already taken offline; VirusTotal has never seen it",
+      "responses": {
+        "urlhaus": {"body": {"query_status": "ok", "url_status": "offline", "threat": "malware_download",
+          "tags": ["js", "PaperLantern"], "date_added": "2026-10-26 07:40:00 UTC",
+          "urlhaus_reference": "https://urlhaus.abuse.ch/url/0000002/"}}
+      },
+      "expected": {"verdict": "MALICIOUS", "score": 80}
+    },
+    {
+      "value": "10.20.4.17",
+      "type": "ipv4",
+      "role": "Infected internal workstation FIN-WS-07; must never be sent to external services",
+      "responses": {},
+      "expected": {"verdict": "PRIVATE", "score": null}
+    },
+    {
+      "value": "47c564b1a948b0ce4aef199ff63a53ee11c3fc3c073c6499250032c75ae418f9",
+      "type": "sha256",
+      "role": "Dropped loader svc_update.exe",
+      "responses": {
+        "virustotal": {"body": {"data": {"attributes": {
+          "last_analysis_stats": {"malicious": 41, "suspicious": 3, "harmless": 0, "undetected": 28},
+          "meaningful_name": "svc_update.exe", "type_description": "Win32 EXE", "size": 241664,
+          "popular_threat_classification": {"suggested_threat_label": "trojan.paperlantern/loader"}}}}},
+        "urlhaus": {"body": {"query_status": "ok", "signature": "PaperLantern", "file_type": "exe",
+          "url_count": "3", "firstseen": "2026-10-26 07:41:00",
+          "sha256_hash": "47c564b1a948b0ce4aef199ff63a53ee11c3fc3c073c6499250032c75ae418f9"}}
+      },
+      "expected": {"verdict": "MALICIOUS", "score": 100}
+    },
+    {
+      "value": "1.1.1.1",
+      "type": "ipv4",
+      "role": "Public DNS resolver used for a connectivity check (benign, a classic false-positive trap)",
+      "responses": {
+        "virustotal": {"body": {"data": {"attributes": {
+          "last_analysis_stats": {"malicious": 0, "suspicious": 0, "harmless": 68, "undetected": 25},
+          "country": "AU", "as_owner": "CLOUDFLARENET"}}}},
+        "abuseipdb": {"body": {"data": {"abuseConfidenceScore": 0, "totalReports": 12, "countryCode": "AU",
+          "usageType": "Content Delivery Network", "isp": "Cloudflare, Inc.", "isTor": false}}},
+        "rdap": {"body": {"name": "APNIC-LABS", "country": "AU", "startAddress": "1.1.1.0", "endAddress": "1.1.1.255",
+          "entities": [{"roles": ["registrant"], "vcardArray": ["vcard", [["fn", {}, "text", "APNIC and Cloudflare DNS Resolver project"]]]}]}}
+      },
+      "expected": {"verdict": "CLEAN", "score": 0}
+    },
+    {
+      "value": "91.215.85.142",
+      "type": "ipv4",
+      "role": "Command-and-control server (beacon every 60 s)",
+      "responses": {
+        "virustotal": {"body": {"data": {"attributes": {
+          "last_analysis_stats": {"malicious": 12, "suspicious": 1, "harmless": 50, "undetected": 30},
+          "country": "XX", "as_owner": "Fictional Hosting LLC"}}}},
+        "abuseipdb": {"body": {"data": {"abuseConfidenceScore": 100, "totalReports": 318, "numDistinctUsers": 74,
+          "countryCode": "XX", "usageType": "Data Center/Web Hosting/Transit", "isTor": false,
+          "lastReportedAt": "2026-10-28T08:59:00+00:00"}}},
+        "rdap": {"body": {"name": "FICTIONAL-HOSTING-NET", "country": "XX"}}
+      },
+      "expected": {"verdict": "MALICIOUS", "score": 100}
+    },
+    {
+      "value": "185.81.157.24",
+      "type": "ipv4",
+      "role": "VPS hosting the second stage; VirusTotal lookup hits the rate limit",
+      "responses": {
+        "virustotal": {"status": 429, "body": {"error": {"code": "QuotaExceededError"}}},
+        "abuseipdb": {"body": {"data": {"abuseConfidenceScore": 45, "totalReports": 9, "numDistinctUsers": 6,
+          "countryCode": "XX", "usageType": "Data Center/Web Hosting/Transit", "isTor": false}}},
+        "rdap": {"body": {"name": "CHEAP-VPS-NET", "country": "XX"}}
+      },
+      "expected": {"verdict": "SUSPICIOUS", "score": 45}
+    },
+    {
+      "value": "25e0fbf1e994a30ddbbb1d7d0eefa74cf814bcf8",
+      "type": "sha1",
+      "role": "Brand-new DLL no source has seen yet (UNKNOWN does not mean safe)",
+      "responses": {},
+      "expected": {"verdict": "UNKNOWN", "score": null}
+    }
+  ]
+}

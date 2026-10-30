@@ -130,7 +130,7 @@ src/ioc_enricher/
     ├── abuseipdb.py
     ├── urlhaus.py
     └── rdap.py
-tests/                # 69 tests, no network access needed
+tests/                # 98 tests incl. an end-to-end incident scenario, no network needed
 ```
 
 Adding a new source means writing one class with a `_lookup()` method. See `providers/abuseipdb.py` for the simplest example.
@@ -144,6 +144,28 @@ ruff check .
 ```
 
 Tests use a fake HTTP session, so they run offline and never consume API quota.
+
+### Scenario test: "Paper Lantern"
+
+`tests/test_scenario.py` runs the whole tool on a **fictional incident** (phishing email → malicious script → loader → C2), the way an analyst would use it:
+
+- `tests/data/paper_lantern_report.txt` is the incident report, with defanged IOCs mixed into normal text and file names.
+- `tests/data/paper_lantern_dataset.json` holds invented API responses for each of the 10 IOCs, plus the verdict an analyst would expect and why.
+
+The real provider classes run unchanged against a fake "internet" that answers from the dataset. The test checks that:
+
+| Check | Example from the scenario |
+|---|---|
+| Every IOC is extracted, nothing extra | `INV-2026-1043.pdf.js` and `fin-ws-07_triage.zip` are ignored |
+| Each verdict matches the analyst's expectation | C2 IP → MALICIOUS, decoy PDF → CLEAN, new DLL → UNKNOWN |
+| Internal IPs never leave the network | `10.20.4.17` is never sent to any provider |
+| One failing source doesn't break triage | VirusTotal rate-limits on `185.81.157.24`, AbuseIPDB still gives SUSPICIOUS |
+| Weak signals add up | A 5-day-old domain with 1 VT hit, also listed on URLhaus → MALICIOUS |
+| Benign infrastructure isn't flagged | `1.1.1.1` (connectivity check) → CLEAN |
+| Output is safe to paste into a ticket | The Markdown table is fully defanged |
+| The CLI escalates | `--fail-on malicious` exits with code 2 |
+
+All names, domains (`.example`/`.test` are reserved and never resolve) and threat-intel results in this scenario are made up.
 
 ## Roadmap
 
