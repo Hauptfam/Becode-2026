@@ -147,6 +147,8 @@ Tests use a fake HTTP session, so they run offline and never consume API quota.
 
 ### Scenario test: "Paper Lantern"
 
+📄 **Full dataset with every IOC, source answer and score calculation: [docs/paper-lantern-dataset.md](docs/paper-lantern-dataset.md)**
+
 `tests/test_scenario.py` runs the whole tool on a **fictional incident** (phishing email → malicious script → loader → C2), the way an analyst would use it:
 
 - `tests/data/paper_lantern_report.txt` is the incident report, with defanged IOCs mixed into normal text and file names.
