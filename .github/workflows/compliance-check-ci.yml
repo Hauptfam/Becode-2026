@@ -1,0 +1,46 @@
+name: compliance-check CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    defaults:
+      run:
+        working-directory: compliance-check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -v
+
+  report:
+    # Scans the whole repository on every push and keeps the PDF as a downloadable artifact.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history, so the change-management check can see pull requests
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ./compliance-check -e ./ioc-enricher -e ./mini-siem
+      - run: compliance-check . --online --pdf compliance-report.pdf --json compliance-report.json --sbom sbom.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: |
+            compliance-report.pdf
+            compliance-report.json
+            sbom.cdx.json
