@@ -1,0 +1,233 @@
+{
+  "_comment": "Theoretical response dataset for the fictional 'Paper Lantern' incident, the same incident as the ioc-enricher and mini-siem datasets. For each mini-SIEM alert (after enrichment), 'role' explains it and the 'expected_*' fields say what the SOAR must do. Alerts are processed by severity, then by time, so later alerts find indicators already blocked and approvals already requested. Everything is invented.",
+  "scenario": "Paper Lantern",
+  "siem_dataset": "../../mini-siem/data/paper_lantern_logs.json",
+  "processing_order": [
+    "MS-002",
+    "MS-004",
+    "MS-006",
+    "MS-001",
+    "MS-003",
+    "MS-005",
+    "MS-008",
+    "MS-007"
+  ],
+  "alerts": [
+    {
+      "rule": "MS-002",
+      "role": "Script disguised as a PDF downloaded from the phishing domain (critical, domain MALICIOUS)",
+      "expected_playbook": "PB-02",
+      "expected_actions": [
+        {
+          "action": "block_ioc",
+          "target": "invoice-portal-secure.example",
+          "status": "done"
+        },
+        {
+          "action": "block_ioc",
+          "target": "https://invoice-portal-secure.example/download/INV-2026-1043.pdf.js",
+          "status": "not run",
+          "why": "URL verdict is UNKNOWN: only MALICIOUS indicators are blocked automatically"
+        },
+        {
+          "action": "isolate_host",
+          "target": "FIN-WS-07",
+          "status": "pending",
+          "why": "isolation stops the user from working: an analyst decides"
+        }
+      ],
+      "expected_case": "CASE-0001",
+      "expected_siem_status": "in_progress"
+    },
+    {
+      "rule": "MS-004",
+      "role": "Script wrote the loader to disk (critical, hash MALICIOUS)",
+      "expected_playbook": "PB-02",
+      "expected_actions": [
+        {
+          "action": "block_ioc",
+          "target": "47c564b1a948b0ce4aef199ff63a53ee11c3fc3c073c6499250032c75ae418f9",
+          "status": "done"
+        },
+        {
+          "action": "isolate_host",
+          "target": "FIN-WS-07",
+          "status": "skipped",
+          "why": "approval already requested by the MS-002 alert"
+        }
+      ],
+      "expected_case": "CASE-0001",
+      "expected_siem_status": "in_progress"
+    },
+    {
+      "rule": "MS-006",
+      "role": "C2 beaconing (critical, IP MALICIOUS)",
+      "expected_playbook": "PB-02",
+      "expected_actions": [
+        {
+          "action": "block_ioc",
+          "target": "91.215.85.142",
+          "status": "done"
+        },
+        {
+          "action": "isolate_host",
+          "target": "FIN-WS-07",
+          "status": "skipped",
+          "why": "approval already requested"
+        }
+      ],
+      "expected_case": "CASE-0001",
+      "expected_siem_status": "in_progress"
+    },
+    {
+      "rule": "MS-001",
+      "role": "The phishing email (high, domain and link MALICIOUS)",
+      "expected_playbook": "PB-01",
+      "expected_actions": [
+        {
+          "action": "block_ioc",
+          "target": "invoice-portal-secure.example",
+          "status": "skipped",
+          "why": "already blocked by the MS-002 alert"
+        },
+        {
+          "action": "block_ioc",
+          "target": "https://invoice-portal-secure.example/view/INV-2026-1043.html",
+          "status": "done"
+        },
+        {
+          "action": "purge_email",
+          "target": "<7f3a@invoice-portal-secure.example>",
+          "status": "pending",
+          "why": "deleting mail from every mailbox needs an analyst"
+        }
+      ],
+      "expected_case": "CASE-0001",
+      "expected_siem_status": "in_progress"
+    },
+    {
+      "rule": "MS-003",
+      "role": "wscript.exe ran the script (high, no external indicator)",
+      "expected_playbook": "PB-03",
+      "expected_actions": [
+        {
+          "action": "block_ioc",
+          "target": null,
+          "status": "skipped",
+          "why": "no suspicious indicator"
+        }
+      ],
+      "expected_case": "CASE-0001",
+      "expected_siem_status": "new"
+    },
+    {
+      "rule": "MS-005",
+      "role": "Unsigned loader started (high, hash MALICIOUS)",
+      "expected_playbook": "PB-02",
+      "expected_actions": [
+        {
+          "action": "block_ioc",
+          "target": "47c564b1a948b0ce4aef199ff63a53ee11c3fc3c073c6499250032c75ae418f9",
+          "status": "skipped",
+          "why": "already blocked"
+        },
+        {
+          "action": "isolate_host",
+          "target": "FIN-WS-07",
+          "status": "skipped",
+          "why": "approval already requested"
+        }
+      ],
+      "expected_case": "CASE-0001",
+      "expected_siem_status": "in_progress"
+    },
+    {
+      "rule": "MS-008",
+      "role": "Second stage downloaded from a VPS (medium, IP SUSPICIOUS)",
+      "expected_playbook": "PB-03",
+      "expected_actions": [
+        {
+          "action": "block_ioc",
+          "target": "185.81.157.24",
+          "status": "pending",
+          "why": "SUSPICIOUS only: block after an analyst approves"
+        }
+      ],
+      "expected_case": "CASE-0001",
+      "expected_siem_status": "new"
+    },
+    {
+      "rule": "MS-007",
+      "role": "Unknown DLL loaded (medium, hash UNKNOWN)",
+      "expected_playbook": "PB-03",
+      "expected_actions": [
+        {
+          "action": "block_ioc",
+          "target": null,
+          "status": "skipped",
+          "why": "UNKNOWN is not blocked; send it to a sandbox"
+        }
+      ],
+      "expected_case": "CASE-0001",
+      "expected_siem_status": "new"
+    }
+  ],
+  "expected_blocklists": {
+    "domains": [
+      "invoice-portal-secure.example"
+    ],
+    "urls": [
+      "https://invoice-portal-secure.example/view/INV-2026-1043.html"
+    ],
+    "ips": [
+      "91.215.85.142"
+    ],
+    "hashes": [
+      "47c564b1a948b0ce4aef199ff63a53ee11c3fc3c073c6499250032c75ae418f9"
+    ]
+  },
+  "expected_pending_approvals": [
+    {
+      "action": "isolate_host",
+      "target": "FIN-WS-07",
+      "status": "pending"
+    },
+    {
+      "action": "purge_email",
+      "target": "<7f3a@invoice-portal-secure.example>",
+      "status": "pending"
+    },
+    {
+      "action": "block_ioc",
+      "target": "185.81.157.24",
+      "status": "pending"
+    }
+  ],
+  "must_never_be_blocked_automatically": [
+    {
+      "value": "10.20.4.17",
+      "why": "internal address of the victim workstation"
+    },
+    {
+      "value": "1.1.1.1",
+      "why": "public DNS resolver on the allowlist (the loader's connectivity check)"
+    },
+    {
+      "value": "lumenfreight.example",
+      "why": "our own domain, on the allowlist"
+    },
+    {
+      "value": "185.81.157.24",
+      "why": "only SUSPICIOUS: needs an analyst"
+    },
+    {
+      "value": "https://invoice-portal-secure.example/download/INV-2026-1043.pdf.js",
+      "why": "verdict UNKNOWN"
+    },
+    {
+      "value": "25e0fbf1e994a30ddbbb1d7d0eefa74cf814bcf8",
+      "why": "verdict UNKNOWN"
+    }
+  ],
+  "expected_cases": 1
+}
