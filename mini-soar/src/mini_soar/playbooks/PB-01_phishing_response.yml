@@ -1,0 +1,18 @@
+id: PB-01
+name: Phishing response
+priority: 10
+description: >
+  A phishing email reached a user. Block the malicious sender domain and links, ask an analyst to approve
+  removing the email from every mailbox, open a ticket and warn the team.
+trigger:
+  rule_id: [MS-001]
+  ti_verdict: [MALICIOUS, SUSPICIOUS, UNKNOWN, NONE]
+steps:
+  - action: block_ioc
+    params: {verdicts: [MALICIOUS]}
+  - action: purge_email
+    approval: required
+  - action: create_ticket
+  - action: notify
+  - action: update_alert
+    params: {status: in_progress}

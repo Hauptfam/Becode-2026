@@ -1,0 +1,16 @@
+id: PB-03
+name: Prepare analyst review
+priority: 90
+description: >
+  Nothing is confirmed malicious, so nothing is blocked automatically. Suspicious indicators can be blocked
+  after an analyst approves; the SOAR prepares a ticket so the analyst starts with everything in one place.
+trigger:
+  ti_verdict: [SUSPICIOUS, UNKNOWN, NONE]
+steps:
+  - action: block_ioc
+    params: {verdicts: [SUSPICIOUS]}
+    approval: required
+  - action: create_ticket
+  - action: notify
+  - action: update_alert
+    params: {note: "needs analyst review: no indicator is confirmed malicious"}

@@ -1,0 +1,31 @@
+name: mini-soar CI
+
+on:
+  push:
+    paths: ["mini-soar/**", "mini-siem/**", "ioc-enricher/**", ".github/workflows/mini-soar-ci.yml"]
+  pull_request:
+    paths: ["mini-soar/**", "mini-siem/**", "ioc-enricher/**", ".github/workflows/mini-soar-ci.yml"]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: mini-soar
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ../ioc-enricher -e ../mini-siem -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -v
+      - name: Demo runs end to end
+        run: mini-soar --db /tmp/soar.db --out /tmp/soar-output demo

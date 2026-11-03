@@ -1,0 +1,11 @@
+# Indicators the SOAR must never block automatically, even if a threat-intel source flags them.
+# Private and internal IP addresses are always refused, whatever this file says.
+domains:            # a domain also covers its subdomains
+  - lumenfreight.example     # our own organisation (fictional)
+ips:
+  - 1.1.1.1                  # public DNS resolvers: blocking them breaks name resolution
+  - 1.0.0.1
+  - 8.8.8.8
+  - 8.8.4.4
+  - 9.9.9.9
+cidrs: []
