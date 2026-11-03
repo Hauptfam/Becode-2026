@@ -1,0 +1,36 @@
+name: interview demo
+
+# Runs the automated walkthrough end to end on Windows (demo.ps1) and Linux (demo.py),
+# so the interview demo keeps working when the projects change.
+on:
+  push:
+    paths: ["demo.py", "demo.ps1", "ioc-enricher/**", "mini-siem/**", "mini-soar/**", ".github/workflows/demo-ci.yml"]
+  pull_request:
+    paths: ["demo.py", "demo.ps1", "ioc-enricher/**", "mini-siem/**", "mini-soar/**", ".github/workflows/demo-ci.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run demo.ps1 (installs everything, then runs the 5 steps)
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\demo.ps1 -NoPause -NoBrowser -Name ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ./ioc-enricher -e ./mini-siem -e "./mini-soar[dev]"
+      - run: python demo.py --no-pause --no-browser --name ci
