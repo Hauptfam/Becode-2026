@@ -11,4 +11,4 @@ Repository for cybersecurity projects
 
 Together, ioc-enricher, mini-siem and mini-soar form a small detection-and-response pipeline: **logs → detection → threat-intel enrichment → automated response → analyst decision**. They share a fictional test incident, **Paper Lantern** (phishing email → malicious script → loader → C2 beaconing), seen as indicators ([ioc-enricher](ioc-enricher/docs/paper-lantern-dataset.md)), as logs ([mini-siem](mini-siem/docs/paper-lantern-logs.md)) and as responses ([mini-soar](mini-soar/docs/paper-lantern-responses.md)).
 
-🎤 **Presenting these projects?** See the [interview walkthrough](WALKTHROUGH.md): a 30-second pitch, a 10-minute demo script, design choices and likely questions.
+🎤 **Presenting these projects?** See the [interview walkthrough](WALKTHROUGH.md): a 30-second pitch, a 10-minute demo script, design choices and likely questions. To run the whole demo automatically on Windows: `.\demo.ps1`

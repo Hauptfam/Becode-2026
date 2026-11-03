@@ -9,6 +9,31 @@ How to present this repository in a SOC analyst interview: a 30-second pitch, a 
 | [Design choices](#4-design-choices-worth-mentioning) | when asked | Show you thought like an analyst, not just a coder |
 | [Questions](#5-questions-you-will-probably-get) | when asked | Answer with confidence |
 
+## ⚡ The automated version
+
+Instead of typing the commands, run one script from the `Becode-2026` folder:
+
+```powershell
+.\demo.ps1 -Name your-name
+```
+
+On the first run it creates a `.venv` folder and installs the three projects (about a minute). Then it plays the five steps of [section 3](#3-the-demo-script). For each step it shows the command, runs it, and prints the points to make, then waits for **Enter** so you can talk. It starts the dashboard in the background, opens your browser on the right page at each step, approves and rejects the SOAR's requests with your name, and stops the dashboard at the end.
+
+| Option | Effect |
+|---|---|
+| `-Name mateo` | Your name in the approval audit trail |
+| `-NoPause` | Run straight through, without waiting (good for a rehearsal) |
+| `-NoBrowser` | Don't open the browser (if you prefer to click yourself) |
+| `-SkipTests` | Skip step 5 |
+| `-Port 8080` | Use another port (it also picks the next free port automatically if 5000 is busy) |
+| `-Setup` | Reinstall the projects, for example after a `git pull` |
+
+Type **q** then Enter at any pause to stop. On Mac or Linux, install the projects (section 2), then run `python demo.py`, which takes the same options in lowercase (`--name`, `--no-pause`, ...).
+
+If PowerShell refuses to run the script, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or start it with `powershell -ExecutionPolicy Bypass -File .\demo.ps1`.
+
+The rest of this guide explains each step, so read it at least once: the script runs the demo, but you are the one who has to explain it.
+
 ---
 
 ## 1. The 30-second pitch
@@ -196,7 +221,8 @@ A good exercise: change one value (for example `min_count: 6` to `min_count: 10`
 | `... is not recognized` | The environment isn't active: `.venv\Scripts\Activate.ps1` |
 | Browser says *connection refused* | The dashboard isn't running, or you pressed Ctrl+C: start `mini-siem ... serve` again |
 | `Address already in use` | Add `--port 8080` and open http://127.0.0.1:8080 |
-| Approval IDs differ | Run `mini-soar pending` and use the IDs it shows |
+| Approval IDs differ | Run `mini-soar pending` and use the IDs it shows (`demo.ps1` finds them by itself) |
+| `demo.ps1` fails on `soar-output` (file in use) | A dashboard from an earlier run is still open on that database: close that PowerShell window, then retry |
 | Anything else | Stay calm, switch to the screenshots in the [mini-siem](mini-siem/README.md) and [mini-soar](mini-soar/README.md) READMEs and explain from there |
 
 Having a fallback ready is a good habit to show in itself: incident response is about staying calm when things don't go as planned.
