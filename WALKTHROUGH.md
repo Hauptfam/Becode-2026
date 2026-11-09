@@ -2,6 +2,8 @@
 
 How to present this repository in a SOC analyst interview: a 30-second pitch, a 10-minute live demo with what to say at each step, the design choices worth highlighting, and answers to the questions interviewers usually ask.
 
+📄 **Visual version:** [WALKTHROUGH.pdf](WALKTHROUGH.pdf) explains each step with diagrams, real outputs and screenshots: what you run, what happens inside the tools, what you see, why it matters, and what to say.
+
 | Part | Time | Goal |
 |---|---|---|
 | [The pitch](#1-the-30-second-pitch) | 30 s | Say what you built and why it matters for a SOC |
